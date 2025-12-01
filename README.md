@@ -1,13 +1,14 @@
 # n8n-ffmpeg
 
-A ready-to-use tool that combines **n8n** (a visual workflow automation platform) with **ffmpeg** (for processing videos and audio files).
+A ready-to-use tool that combines **n8n** (a visual workflow automation platform) with **ffmpeg** (for processing videos and audio files) and **yt-dlp** (for downloading videos from YouTube and other platforms).
 
 ## What is this?
 
 - **n8n** lets you automate tasks by connecting different apps and services together using a visual drag-and-drop interface — no coding required!
 - **ffmpeg** allows you to work with video and audio files (convert formats, compress, extract audio, etc.)
+- **yt-dlp** is a powerful command-line tool for downloading videos from YouTube, Vimeo, and [many other sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)
 
-This Docker image gives you both tools in one package, so you can build workflows that process media files.
+This Docker image gives you all three tools in one package, so you can build workflows that download and process media files.
 
 ## Getting Started (For Beginners)
 
@@ -60,21 +61,25 @@ That's it! You should see the n8n welcome screen where you can start creating wo
 
 ## What Can You Do With This?
 
-With ffmpeg available in your n8n workflows, you can automate things like:
+With ffmpeg and yt-dlp available in your n8n workflows, you can automate things like:
 
 - 🎬 Convert video formats (e.g., MP4 to AVI)
 - 🎵 Extract audio from video files
 - 🖼️ Create thumbnails from videos
 - 📦 Compress large media files
 - ✂️ Merge or split audio/video files
+- 📥 Download videos from YouTube and other platforms
+- 🎧 Download audio-only from videos
+- 📋 Extract video metadata and information
 
-Use the **Execute Command** node in n8n to run ffmpeg commands within your workflows.
+Use the **Execute Command** node in n8n to run ffmpeg or yt-dlp commands within your workflows.
 
 ## Need Help?
 
 - [n8n Documentation](https://docs.n8n.io/)
 - [n8n Community Forum](https://community.n8n.io/)
 - [ffmpeg Documentation](https://ffmpeg.org/documentation.html)
+- [yt-dlp Documentation](https://github.com/yt-dlp/yt-dlp#readme)
 
 ## License
 
