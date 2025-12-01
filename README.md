@@ -63,6 +63,32 @@ Use the **Execute Command** node in n8n to run ffmpeg commands within your workf
 | `N8N_PORT` | Port number | `5678` |
 | `GENERIC_TIMEZONE` | Timezone | `UTC` |
 
+## Automated Builds
+
+This repository includes a GitHub Actions workflow that automatically checks for new n8n versions and builds/pushes updated Docker images.
+
+### How it works
+
+- The workflow runs daily at midnight UTC
+- It checks the latest n8n version on Docker Hub
+- If a new version is available, it builds and pushes a new image
+- Images are tagged with both `latest` and the specific n8n version (e.g., `1.70.0`)
+
+### Required Setup
+
+To enable automated builds, configure the following in your GitHub repository:
+
+**Repository Variables** (Settings → Secrets and variables → Actions → Variables):
+- `DOCKER_USERNAME`: Your Docker Hub username
+- `DOCKER_IMAGE_NAME`: (Optional) Custom image name, defaults to `n8n-ffmpeg`
+
+**Repository Secrets** (Settings → Secrets and variables → Actions → Secrets):
+- `DOCKER_PASSWORD`: Your Docker Hub password or access token
+
+### Manual Trigger
+
+You can manually trigger a build from the Actions tab by selecting "Build and Push Docker Image" workflow and clicking "Run workflow". Use the "Force build" option to rebuild even if no new version is detected.
+
 ## License
 
 MIT
