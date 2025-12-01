@@ -1,0 +1,111 @@
+name: Build and Push Docker Image
+
+on:
+  schedule:
+    # Check for new n8n versions daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build even if no new version'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  DOCKER_IMAGE: ${{ vars.DOCKER_USERNAME }}/${{ vars.DOCKER_IMAGE_NAME || 'n8n-ffmpeg' }}
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Get latest n8n version
+        id: n8n_version
+        run: |
+          # Get the latest n8n version from Docker Hub
+          LATEST_N8N_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/n8nio/n8n/tags?page_size=100" | \
+            jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' | \
+            sort -V | tail -n1)
+          echo "Latest n8n version: $LATEST_N8N_VERSION"
+          echo "version=$LATEST_N8N_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get current built version
+        id: current_version
+        run: |
+          # Try to get the version from the latest tag on our Docker image
+          CURRENT_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/${{ env.DOCKER_IMAGE }}/tags?page_size=100" 2>/dev/null | \
+            jq -r '.results[]?.name // empty' 2>/dev/null | \
+            grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | \
+            sort -V | tail -n1 || echo "")
+          echo "Current built version: $CURRENT_VERSION"
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if build is needed
+        id: check_build
+        run: |
+          LATEST="${{ steps.n8n_version.outputs.version }}"
+          CURRENT="${{ steps.current_version.outputs.version }}"
+          FORCE="${{ github.event.inputs.force_build }}"
+          
+          if [ "$FORCE" = "true" ]; then
+            echo "Force build requested"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          elif [ -z "$CURRENT" ]; then
+            echo "No current version found, building..."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          elif [ "$LATEST" != "$CURRENT" ]; then
+            echo "New version available: $LATEST (current: $CURRENT)"
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "Already up to date with version $CURRENT"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up QEMU
+        if: steps.check_build.outputs.should_build == 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: steps.check_build.outputs.should_build == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: steps.check_build.outputs.should_build == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        if: steps.check_build.outputs.should_build == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            N8N_VERSION=${{ steps.n8n_version.outputs.version }}
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ steps.n8n_version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check_build.outputs.should_build }}" = "true" ]; then
+            echo "## ✅ Docker image built and pushed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **n8n version:** ${{ steps.n8n_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Image:** \`${{ env.DOCKER_IMAGE }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tags:** \`latest\`, \`${{ steps.n8n_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ℹ️ No build needed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Current version:** ${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Latest n8n version:** ${{ steps.n8n_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          fi
