@@ -18,6 +18,8 @@ env:
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Check out repository
