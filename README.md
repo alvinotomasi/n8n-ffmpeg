@@ -1,6 +1,6 @@
 # n8n-ffmpeg
 
-A Docker image combining [n8n](https://n8n.io/) (workflow automation) with [ffmpeg](https://ffmpeg. org/) (multimedia processing framework).
+A Docker image combining [n8n](https://n8n.io/) (workflow automation) with [ffmpeg](https://ffmpeg.org/) (multimedia processing framework).
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ docker build -t n8n-ffmpeg .
 ```bash
 docker run -it --rm \
   -p 5678:5678 \
-  -v n8n_data:/home/node/. n8n \
+  -v n8n_data:/home/node/.n8n \
   n8n-ffmpeg
 ```
 
