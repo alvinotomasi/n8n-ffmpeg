@@ -1,93 +1,80 @@
 # n8n-ffmpeg
 
-A Docker image combining [n8n](https://n8n.io/) (workflow automation) with [ffmpeg](https://ffmpeg.org/) (multimedia processing framework).
+A ready-to-use tool that combines **n8n** (a visual workflow automation platform) with **ffmpeg** (for processing videos and audio files).
 
-## Prerequisites
+## What is this?
 
-- Docker
-- Docker Compose (optional)
+- **n8n** lets you automate tasks by connecting different apps and services together using a visual drag-and-drop interface — no coding required!
+- **ffmpeg** allows you to work with video and audio files (convert formats, compress, extract audio, etc.)
 
-## Quick Start
+This Docker image gives you both tools in one package, so you can build workflows that process media files.
 
-### Build the image
+## Getting Started (For Beginners)
+
+### Step 1: Install Docker
+
+First, you need Docker installed on your computer:
+
+- **Windows/Mac**: Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Linux**: Follow the [official Docker installation guide](https://docs.docker.com/engine/install/)
+
+After installation, make sure Docker is running (you should see the Docker icon in your system tray).
+
+### Step 2: Open a Terminal
+
+- **Windows**: Search for "Command Prompt" or "PowerShell" in the Start menu
+- **Mac**: Open "Terminal" from Applications → Utilities
+- **Linux**: Open your terminal application
+
+### Step 3: Run n8n-ffmpeg
+
+Copy and paste this command into your terminal and press Enter:
 
 ```bash
-docker build -t n8n-ffmpeg .
-```
-
-### Run with Docker
-
-```bash
-docker run -it --rm \
+docker run -d \
+  --name n8n-ffmpeg \
   -p 5678:5678 \
   -v n8n_data:/home/node/.n8n \
-  n8n-ffmpeg
+  otomasiai/n8n-ffmpeg
 ```
 
-### Run with Docker Compose
+**What this does:**
+- Downloads the n8n-ffmpeg image from Docker Hub (only needed the first time)
+- Starts n8n in the background
+- Saves your work so it's not lost when you restart
 
-```bash
-docker-compose up -d
-```
+### Step 4: Open n8n in Your Browser
 
-## Access n8n
+Go to: **http://localhost:5678**
 
-Open your browser and navigate to: http://localhost:5678
+That's it! You should see the n8n welcome screen where you can start creating workflows.
 
-## Verify ffmpeg Installation
+## Useful Commands
 
-```bash
-docker exec -it n8n-ffmpeg ffmpeg -version
-```
+| What you want to do | Command |
+|---------------------|---------|
+| Stop n8n | `docker stop n8n-ffmpeg` |
+| Start n8n again | `docker start n8n-ffmpeg` |
+| View logs | `docker logs n8n-ffmpeg` |
+| Remove completely | `docker rm -f n8n-ffmpeg` |
 
-## Use Cases
+## What Can You Do With This?
 
-With ffmpeg available in your n8n workflows, you can:
+With ffmpeg available in your n8n workflows, you can automate things like:
 
-- Convert video/audio formats
-- Extract audio from video files
-- Create thumbnails from videos
-- Compress media files
-- Merge or split audio/video files
+- 🎬 Convert video formats (e.g., MP4 to AVI)
+- 🎵 Extract audio from video files
+- 🖼️ Create thumbnails from videos
+- 📦 Compress large media files
+- ✂️ Merge or split audio/video files
 
 Use the **Execute Command** node in n8n to run ffmpeg commands within your workflows.
 
-## Environment Variables
+## Need Help?
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `N8N_BASIC_AUTH_ACTIVE` | Enable basic authentication | `true` |
-| `N8N_BASIC_AUTH_USER` | Basic auth username | `admin` |
-| `N8N_BASIC_AUTH_PASSWORD` | Basic auth password | `changeme` |
-| `N8N_HOST` | Host name | `localhost` |
-| `N8N_PORT` | Port number | `5678` |
-| `GENERIC_TIMEZONE` | Timezone | `UTC` |
-
-## Automated Builds
-
-This repository includes a GitHub Actions workflow that automatically checks for new n8n versions and builds/pushes updated Docker images.
-
-### How it works
-
-- The workflow runs daily at midnight UTC
-- It checks the latest n8n version on Docker Hub
-- If a new version is available, it builds and pushes a new image
-- Images are tagged with both `latest` and the specific n8n version (e.g., `1.70.0`)
-
-### Required Setup
-
-To enable automated builds, configure the following in your GitHub repository:
-
-**Repository Variables** (Settings → Secrets and variables → Actions → Variables):
-- `DOCKER_USERNAME`: Your Docker Hub username
-- `DOCKER_IMAGE_NAME`: (Optional) Custom image name, defaults to `n8n-ffmpeg`
-
-**Repository Secrets** (Settings → Secrets and variables → Actions → Secrets):
-- `DOCKER_PASSWORD`: Your Docker Hub password or access token
-
-### Manual Trigger
-
-You can manually trigger a build from the Actions tab by selecting "Build and Push Docker Image" workflow and clicking "Run workflow". Use the "Force build" option to rebuild even if no new version is detected.
+- [n8n Documentation](https://docs.n8n.io/)
+- [n8n Community Forum](https://community.n8n.io/)
+- [ffmpeg Documentation](https://ffmpeg.org/documentation.html)
 
 ## License
 
