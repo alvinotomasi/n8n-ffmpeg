@@ -27,9 +27,20 @@ jobs:
         id: n8n_version
         run: |
           # Get the latest n8n version from Docker Hub
-          LATEST_N8N_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/n8nio/n8n/tags?page_size=100" | \
+          RESPONSE=$(curl -sf "https://registry.hub.docker.com/v2/repositories/n8nio/n8n/tags?page_size=100") || {
+            echo "::error::Failed to fetch n8n versions from Docker Hub"
+            exit 1
+          }
+          
+          LATEST_N8N_VERSION=$(echo "$RESPONSE" | \
             jq -r '.results[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | .name' | \
             sort -V | tail -n1)
+          
+          if [ -z "$LATEST_N8N_VERSION" ]; then
+            echo "::error::Could not determine latest n8n version"
+            exit 1
+          fi
+          
           echo "Latest n8n version: $LATEST_N8N_VERSION"
           echo "version=$LATEST_N8N_VERSION" >> $GITHUB_OUTPUT
 
@@ -37,11 +48,24 @@ jobs:
         id: current_version
         run: |
           # Try to get the version from the latest tag on our Docker image
-          CURRENT_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/${{ env.DOCKER_IMAGE }}/tags?page_size=100" 2>/dev/null | \
-            jq -r '.results[]?.name // empty' 2>/dev/null | \
-            grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | \
-            sort -V | tail -n1 || echo "")
-          echo "Current built version: $CURRENT_VERSION"
+          # A 404 is expected if the repository doesn't exist yet
+          HTTP_CODE=$(curl -s -o /tmp/docker_response.json -w "%{http_code}" \
+            "https://registry.hub.docker.com/v2/repositories/${{ env.DOCKER_IMAGE }}/tags?page_size=100")
+          
+          if [ "$HTTP_CODE" = "404" ]; then
+            echo "Docker repository not found (first build)"
+            CURRENT_VERSION=""
+          elif [ "$HTTP_CODE" = "200" ]; then
+            CURRENT_VERSION=$(cat /tmp/docker_response.json | \
+              jq -r '.results[]?.name // empty' 2>/dev/null | \
+              grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | \
+              sort -V | tail -n1 || echo "")
+          else
+            echo "::warning::Unexpected HTTP status $HTTP_CODE when checking current version"
+            CURRENT_VERSION=""
+          fi
+          
+          echo "Current built version: ${CURRENT_VERSION:-none}"
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if build is needed
